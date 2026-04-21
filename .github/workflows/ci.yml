@@ -40,6 +40,8 @@ jobs:
         with:
           toolchain: "1.70"
       - run: cargo check --workspace --lib
+        env:
+          ZVEC_AUTO_BUILD: "0"
 
   clippy:
     name: Clippy (${{ matrix.platform }})
@@ -64,11 +66,6 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v5
-        if: runner.os != 'Windows'
-        with:
-          python-version: '3.10'
-
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -91,6 +88,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/alibaba/zvec.git ../zvec
           cd ../zvec
+          mkdir -p build && cd build
 
           if [[ "${{ matrix.platform }}" == macos-* ]]; then
             NPROC=$(sysctl -n hw.ncpu 2>/dev/null || echo 2)
@@ -98,13 +96,8 @@ jobs:
             NPROC=$(nproc 2>/dev/null || echo 2)
           fi
 
-          python -m pip install --upgrade pip pybind11==3.0 cmake==3.30.0 ninja==1.11.1 scikit-build-core setuptools_scm
-
-          CMAKE_GENERATOR="Unix Makefiles" \
-          CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \
-          python -m pip install -v . \
-            --no-build-isolation \
-            --config-settings='cmake.define.BUILD_TOOLS="ON"'
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_C_BINDINGS=ON -DBUILD_PYTHON_BINDINGS=OFF -DBUILD_TOOLS=OFF
+          cmake --build . --config Release --parallel "$NPROC"
         shell: bash
 
       - name: Clone and build zvec C library (Windows)
@@ -112,9 +105,8 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/alibaba/zvec.git ../zvec
           cd ../zvec
-          mkdir -p build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_C_BINDINGS=ON -DBUILD_TOOLS=OFF
+          mkdir -p build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_C_BINDINGS=ON -DBUILD_PYTHON_BINDINGS=OFF -DBUILD_TOOLS=OFF
           cmake --build . --config Release --parallel
         shell: bash
 
@@ -170,11 +162,6 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v5
-        if: runner.os != 'Windows'
-        with:
-          python-version: '3.10'
-
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
@@ -195,6 +182,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/alibaba/zvec.git ../zvec
           cd ../zvec
+          mkdir -p build && cd build
 
           if [[ "${{ matrix.platform }}" == macos-* ]]; then
             NPROC=$(sysctl -n hw.ncpu 2>/dev/null || echo 2)
@@ -202,13 +190,8 @@ jobs:
             NPROC=$(nproc 2>/dev/null || echo 2)
           fi
 
-          python -m pip install --upgrade pip pybind11==3.0 cmake==3.30.0 ninja==1.11.1 scikit-build-core setuptools_scm
-
-          CMAKE_GENERATOR="Unix Makefiles" \
-          CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \
-          python -m pip install -v . \
-            --no-build-isolation \
-            --config-settings='cmake.define.BUILD_TOOLS="ON"'
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_C_BINDINGS=ON -DBUILD_PYTHON_BINDINGS=OFF -DBUILD_TOOLS=OFF
+          cmake --build . --config Release --parallel "$NPROC"
         shell: bash
 
       - name: Clone and build zvec C library (Windows)
@@ -216,9 +199,8 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/alibaba/zvec.git ../zvec
           cd ../zvec
-          mkdir -p build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_C_BINDINGS=ON -DBUILD_TOOLS=OFF
+          mkdir -p build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_C_BINDINGS=ON -DBUILD_PYTHON_BINDINGS=OFF -DBUILD_TOOLS=OFF
           cmake --build . --config Release --parallel
         shell: bash
 
@@ -307,10 +289,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
@@ -331,8 +309,9 @@ jobs:
           git clone --depth 1 https://github.com/alibaba/zvec.git ../zvec
           cd ../zvec
           NPROC=$(nproc 2>/dev/null || echo 2)
-          python -m pip install --upgrade pip pybind11==3.0 cmake==3.30.0 ninja==1.11.1 scikit-build-core setuptools_scm
-          CMAKE_GENERATOR="Unix Makefiles" CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" python -m pip install -v . --no-build-isolation --config-settings='cmake.define.BUILD_TOOLS="ON"'
+          mkdir -p build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_C_BINDINGS=ON -DBUILD_PYTHON_BINDINGS=OFF -DBUILD_TOOLS=OFF
+          cmake --build . --config Release --parallel "$NPROC"
         shell: bash
 
       - name: Set library path
