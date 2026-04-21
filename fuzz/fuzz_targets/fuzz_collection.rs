@@ -35,7 +35,7 @@ fuzz_target!(|input: FuzzInput| {
         operation,
         pk,
         string_value,
-        i32_value,
+        i32_value: _,
         i64_value,
         f32_value,
         vector_data,

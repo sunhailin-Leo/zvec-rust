@@ -2,7 +2,7 @@
 
 use libfuzzer_sys::fuzz_target;
 use std::sync::Once;
-use zvec::{DataType, FieldSchema, IndexParams, IndexType, MetricType};
+use zvec::{DataType, FieldSchema, IndexParams, MetricType};
 
 static INIT: Once = Once::new();
 

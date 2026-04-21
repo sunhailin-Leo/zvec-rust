@@ -618,7 +618,8 @@ mod tests {
 
     #[test]
     fn test_index_params_set_quantize_type() {
-        let mut params = IndexParams::hnsw_with_quantize(MetricType::L2, 16, 200, QuantizeType::Undefined);
+        let mut params =
+            IndexParams::hnsw_with_quantize(MetricType::L2, 16, 200, QuantizeType::Undefined);
         params.set_quantize_type(QuantizeType::Int8).unwrap();
         assert_eq!(params.quantize_type(), QuantizeType::Int8);
     }
