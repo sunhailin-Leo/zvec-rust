@@ -5,7 +5,7 @@
 
 [English](README.md) | 中文
 
-安全、地道的 [zvec](https://github.com/alibaba/zvec) 向量数据库 Rust 绑定。
+安全、符合 Rust 语言习惯的 [zvec](https://github.com/alibaba/zvec) 向量数据库 Rust 绑定。
 
 ## 特性
 

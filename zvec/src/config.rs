@@ -307,4 +307,63 @@ mod tests {
         assert_eq!(builder.num_threads, 0);
         assert!(!builder.enable_console_log);
     }
+
+    #[test]
+    fn config_builder_memory_limit_setter() {
+        let builder = ConfigDataBuilder::new().memory_limit(2048);
+        assert_eq!(builder.memory_limit, 2048);
+    }
+
+    #[test]
+    fn config_builder_num_threads_setter() {
+        let builder = ConfigDataBuilder::new().num_threads(8);
+        assert_eq!(builder.num_threads, 8);
+    }
+
+    #[test]
+    fn config_builder_enable_console_log_setter() {
+        let builder = ConfigDataBuilder::new().enable_console_log(true);
+        assert!(builder.enable_console_log);
+    }
+
+    #[test]
+    fn config_builder_build_returns_self() {
+        let builder = ConfigDataBuilder::new()
+            .memory_limit(4096)
+            .num_threads(2)
+            .enable_console_log(true)
+            .build();
+        assert_eq!(builder.memory_limit, 4096);
+        assert_eq!(builder.num_threads, 2);
+        assert!(builder.enable_console_log);
+    }
+
+    #[test]
+    fn config_builder_overwrite_values() {
+        let builder = ConfigDataBuilder::new()
+            .memory_limit(1024)
+            .memory_limit(2048)
+            .num_threads(4)
+            .num_threads(8)
+            .enable_console_log(false)
+            .enable_console_log(true);
+        assert_eq!(builder.memory_limit, 2048);
+        assert_eq!(builder.num_threads, 8);
+        assert!(builder.enable_console_log);
+    }
+
+    #[test]
+    fn config_builder_zero_values() {
+        let builder = ConfigDataBuilder::new()
+            .memory_limit(0)
+            .num_threads(0);
+        assert_eq!(builder.memory_limit, 0);
+        assert_eq!(builder.num_threads, 0);
+    }
+
+    #[test]
+    fn config_builder_large_memory_limit() {
+        let builder = ConfigDataBuilder::new().memory_limit(u64::MAX);
+        assert_eq!(builder.memory_limit, u64::MAX);
+    }
 }

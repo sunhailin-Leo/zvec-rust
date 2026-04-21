@@ -586,4 +586,72 @@ mod tests {
         assert_eq!(builder.name, "test_collection");
         assert!(builder.fields.is_empty());
     }
+
+    #[test]
+    fn test_field_schema_non_nullable() {
+        let field = FieldSchema::new("test_field", DataType::Int32, false, 0);
+        assert!(!field.is_nullable());
+    }
+
+    #[test]
+    fn test_field_schema_scalar_dimension_zero() {
+        let field = FieldSchema::new("scalar_field", DataType::String, false, 0);
+        assert_eq!(field.dimension(), 0);
+        assert!(!field.is_vector_field());
+    }
+
+    #[test]
+    fn test_field_schema_try_new_success() {
+        let result = FieldSchema::try_new("valid_field", DataType::Int64, true, 0);
+        assert!(result.is_ok());
+        let field = result.unwrap();
+        assert_eq!(field.name(), "valid_field");
+        assert_eq!(field.data_type(), DataType::Int64);
+    }
+
+    #[test]
+    fn test_index_params_set_metric_type() {
+        let mut params = IndexParams::hnsw(MetricType::L2, 16, 200);
+        params.set_metric_type(MetricType::Cosine).unwrap();
+        assert_eq!(params.metric_type(), MetricType::Cosine);
+    }
+
+    #[test]
+    fn test_index_params_set_quantize_type() {
+        let mut params = IndexParams::hnsw_with_quantize(MetricType::L2, 16, 200, QuantizeType::Undefined);
+        params.set_quantize_type(QuantizeType::Int8).unwrap();
+        assert_eq!(params.quantize_type(), QuantizeType::Int8);
+    }
+
+    #[test]
+    fn test_index_params_ivf_cosine() {
+        let params = IndexParams::ivf(MetricType::Cosine, 100, 10, false);
+        assert_eq!(params.index_type(), IndexType::Ivf);
+        assert_eq!(params.metric_type(), MetricType::Cosine);
+    }
+
+    #[test]
+    fn test_index_params_flat_ip() {
+        let params = IndexParams::flat(MetricType::Ip);
+        assert_eq!(params.index_type(), IndexType::Flat);
+        assert_eq!(params.metric_type(), MetricType::Ip);
+    }
+
+    #[test]
+    fn test_collection_schema_builder_chaining() {
+        let vector_index = IndexParams::hnsw(MetricType::L2, 16, 200);
+        let scalar_index = IndexParams::invert(true, false);
+
+        let builder = CollectionSchemaBuilder::new("chained_collection")
+            .add_field(FieldSchema::new("id", DataType::Int64, false, 0))
+            .add_vector_field("embedding", DataType::VectorFp32, 128, vector_index)
+            .add_indexed_field("category", DataType::String, scalar_index)
+            .max_doc_count_per_segment(5000);
+
+        assert_eq!(builder.fields.len(), 3);
+        assert_eq!(builder.max_doc_count_per_segment, Some(5000));
+        assert_eq!(builder.fields[0].0.name(), "id");
+        assert_eq!(builder.fields[1].0.name(), "embedding");
+        assert_eq!(builder.fields[2].0.name(), "category");
+    }
 }

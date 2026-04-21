@@ -389,6 +389,38 @@ impl Doc {
         Ok(value)
     }
 
+    /// Gets a u32 field value.
+    pub fn get_u32(&self, name: &str) -> Result<u32> {
+        let c_name = to_cstring(name)?;
+        let mut value: u32 = 0;
+        check_error(unsafe {
+            zvec_sys::zvec_doc_get_field_value_basic(
+                self.handle,
+                c_name.as_ptr(),
+                DataType::Uint32 as u32,
+                &mut value as *mut u32 as *mut c_void,
+                std::mem::size_of::<u32>(),
+            )
+        })?;
+        Ok(value)
+    }
+
+    /// Gets a u64 field value.
+    pub fn get_u64(&self, name: &str) -> Result<u64> {
+        let c_name = to_cstring(name)?;
+        let mut value: u64 = 0;
+        check_error(unsafe {
+            zvec_sys::zvec_doc_get_field_value_basic(
+                self.handle,
+                c_name.as_ptr(),
+                DataType::Uint64 as u32,
+                &mut value as *mut u64 as *mut c_void,
+                std::mem::size_of::<u64>(),
+            )
+        })?;
+        Ok(value)
+    }
+
     /// Gets an f32 field value.
     pub fn get_f32(&self, name: &str) -> Result<f32> {
         let c_name = to_cstring(name)?;

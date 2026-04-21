@@ -396,31 +396,34 @@ impl GroupByVectorQuery {
         })
     }
 
-    /// Sets HNSW query parameters (takes ownership).
+    /// Sets HNSW query parameters (takes ownership on success).
     pub fn set_hnsw_params(&mut self, mut params: HnswQueryParams) -> Result<()> {
-        let result = check_error(unsafe {
+        check_error(unsafe {
             zvec_sys::zvec_group_by_vector_query_set_hnsw_params(self.handle, params.handle)
-        });
+        })?;
+        // Ownership transferred to query only on success; prevent double-free
         params.handle = std::ptr::null_mut();
-        result
+        Ok(())
     }
 
-    /// Sets IVF query parameters (takes ownership).
+    /// Sets IVF query parameters (takes ownership on success).
     pub fn set_ivf_params(&mut self, mut params: IvfQueryParams) -> Result<()> {
-        let result = check_error(unsafe {
+        check_error(unsafe {
             zvec_sys::zvec_group_by_vector_query_set_ivf_params(self.handle, params.handle)
-        });
+        })?;
+        // Ownership transferred to query only on success; prevent double-free
         params.handle = std::ptr::null_mut();
-        result
+        Ok(())
     }
 
-    /// Sets Flat query parameters (takes ownership).
+    /// Sets Flat query parameters (takes ownership on success).
     pub fn set_flat_params(&mut self, mut params: FlatQueryParams) -> Result<()> {
-        let result = check_error(unsafe {
+        check_error(unsafe {
             zvec_sys::zvec_group_by_vector_query_set_flat_params(self.handle, params.handle)
-        });
+        })?;
+        // Ownership transferred to query only on success; prevent double-free
         params.handle = std::ptr::null_mut();
-        result
+        Ok(())
     }
 }
 
@@ -501,5 +504,70 @@ mod tests {
         assert!(builder.field_name.is_none());
         assert!(builder.vector.is_none());
         assert_eq!(builder.topk, 10);
+    }
+
+    #[test]
+    fn test_vector_query_builder_partial_setters() {
+        let builder = VectorQueryBuilder::new()
+            .field_name("test_field")
+            .vector(&[1.0, 2.0])
+            .filter("status = 'active'");
+        assert_eq!(builder.field_name, Some("test_field".to_string()));
+        assert_eq!(builder.vector, Some(vec![1.0, 2.0]));
+        assert_eq!(builder.filter, Some("status = 'active'".to_string()));
+        assert!(builder.include_vector.is_none());
+        assert!(builder.output_fields.is_none());
+    }
+
+    #[test]
+    fn test_vector_query_builder_empty_vector() {
+        let builder = VectorQueryBuilder::new()
+            .field_name("test_field")
+            .vector(&[]);
+        assert_eq!(builder.vector, Some(vec![]));
+    }
+
+    #[test]
+    fn test_vector_query_builder_empty_output_fields() {
+        let builder = VectorQueryBuilder::new()
+            .field_name("test_field")
+            .vector(&[1.0])
+            .output_fields(&[]);
+        assert_eq!(builder.output_fields, Some(vec![]));
+    }
+
+    #[test]
+    fn test_vector_query_builder_topk_zero() {
+        let builder = VectorQueryBuilder::new()
+            .field_name("test_field")
+            .vector(&[1.0])
+            .topk(0);
+        assert_eq!(builder.topk, 0);
+    }
+
+    #[test]
+    fn test_vector_query_builder_topk_negative() {
+        let builder = VectorQueryBuilder::new()
+            .field_name("test_field")
+            .vector(&[1.0])
+            .topk(-1);
+        assert_eq!(builder.topk, -1);
+    }
+
+    #[test]
+    fn test_vector_query_builder_overwrite_field_name() {
+        let builder = VectorQueryBuilder::new()
+            .field_name("first_field")
+            .field_name("second_field");
+        assert_eq!(builder.field_name, Some("second_field".to_string()));
+    }
+
+    #[test]
+    fn test_vector_query_builder_large_vector() {
+        let large_vector: Vec<f32> = (0..1024).map(|i| i as f32).collect();
+        let builder = VectorQueryBuilder::new()
+            .field_name("test_field")
+            .vector(&large_vector);
+        assert_eq!(builder.vector.as_ref().unwrap().len(), 1024);
     }
 }
