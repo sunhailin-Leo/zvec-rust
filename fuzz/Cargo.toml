@@ -12,6 +12,7 @@ libfuzzer-sys = "0.4"
 zvec = { path = "../zvec" }
 zvec-sys = { path = "../zvec-sys" }
 arbitrary = { version = "1", features = ["derive"] }
+tempfile = "3"
 
 [[bin]]
 name = "fuzz_types"

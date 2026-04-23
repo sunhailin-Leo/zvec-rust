@@ -354,9 +354,7 @@ mod tests {
 
     #[test]
     fn config_builder_zero_values() {
-        let builder = ConfigDataBuilder::new()
-            .memory_limit(0)
-            .num_threads(0);
+        let builder = ConfigDataBuilder::new().memory_limit(0).num_threads(0);
         assert_eq!(builder.memory_limit, 0);
         assert_eq!(builder.num_threads, 0);
     }
