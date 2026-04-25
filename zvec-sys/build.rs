@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// GitHub repository for downloading prebuilt libraries.
-const PREBUILT_REPO: &str = "sunhailin-Leo/zvec-rust";
+const PREBUILT_REPO: &str = "zvec-ai/zvec-rust";
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
@@ -176,6 +176,9 @@ fn has_zvec_lib(dir: &Path) -> bool {
 fn auto_build_zvec(build_dir: &Path) -> Option<PathBuf> {
     let zvec_src = build_dir.join("zvec");
 
+    // Detect target OS
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
     // Clone if not already present
     if !zvec_src.join("CMakeLists.txt").exists() {
         println!("cargo:warning=Auto-building zvec from source (this may take a while)...");
@@ -217,14 +220,22 @@ fn auto_build_zvec(build_dir: &Path) -> Option<PathBuf> {
     let cmake_build_dir = build_dir.join("cmake-build");
     std::fs::create_dir_all(&cmake_build_dir).ok()?;
 
+    // Set macOS deployment target to 14.0 for compatibility
+    let mut cmake_args = vec![
+        zvec_src.to_str()?,
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBUILD_C_BINDINGS=ON",
+        "-DBUILD_TOOLS=OFF",
+    ];
+
+    // Add macOS deployment target if building for macOS
+    if target_os == "macos" {
+        cmake_args.push("-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0");
+    }
+
     let configure_output = Command::new("cmake")
         .current_dir(&cmake_build_dir)
-        .args([
-            zvec_src.to_str()?,
-            "-DCMAKE_BUILD_TYPE=Release",
-            "-DBUILD_C_BINDINGS=ON",
-            "-DBUILD_TOOLS=OFF",
-        ])
+        .args(&cmake_args)
         .output();
 
     match configure_output {

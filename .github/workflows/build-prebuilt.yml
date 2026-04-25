@@ -56,8 +56,10 @@ jobs:
 
       - name: Clone zvec
         run: |
-          git clone --depth 1 --branch ${{ inputs.zvec_ref || 'main' }} \
+          git clone --branch ${{ inputs.zvec_ref || 'main' }} \
             https://github.com/alibaba/zvec.git ../zvec
+          cd ../zvec
+          git submodule update --init --recursive
         shell: bash
 
       - name: Build zvec C library (Unix)
@@ -72,6 +74,9 @@ jobs:
           fi
 
           python -m pip install --upgrade pip pybind11==3.0 cmake==3.30.0 ninja==1.11.1 scikit-build-core setuptools_scm
+
+          # Set macOS deployment target to support macOS 14.x (Sonoma) and later
+          export MACOSX_DEPLOYMENT_TARGET="14.0"
 
           CMAKE_GENERATOR="Unix Makefiles" \
           CMAKE_BUILD_PARALLEL_LEVEL="$NPROC" \

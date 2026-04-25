@@ -271,10 +271,6 @@ jobs:
         run: cargo test --workspace --doc
         shell: bash
 
-      - name: Compile benchmarks (no run)
-        run: cargo bench --workspace --no-run
-        shell: bash
-
   audit:
     name: Security Audit
     needs: test
@@ -310,58 +306,3 @@ jobs:
             echo "✅ Versions are in sync: $UPSTREAM_VERSION"
           fi
         shell: bash
-
-  benchmark:
-    name: Benchmark
-    needs: test
-    if: github.event_name == 'push'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: bench-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
-          restore-keys: |
-            bench-cargo-
-
-      - name: Clone and build zvec C library
-        run: |
-          git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/alibaba/zvec.git ../zvec
-          cd ../zvec
-          NPROC=$(nproc 2>/dev/null || echo 2)
-          mkdir -p build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_C_BINDINGS=ON -DBUILD_PYTHON_BINDINGS=OFF -DBUILD_TOOLS=OFF
-          cmake --build . --config Release --parallel "$NPROC"
-        shell: bash
-
-      - name: Set library path
-        run: |
-          ZVEC_LIB_DIR="$(cd ../zvec/build/lib 2>/dev/null && pwd || echo '')"
-          echo "ZVEC_LIB_DIR=$ZVEC_LIB_DIR" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$ZVEC_LIB_DIR" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Run benchmarks
-        run: cargo bench --workspace -- --output-format bencher | tee benchmark-output.txt
-        shell: bash
-
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          tool: cargo
-          output-file-path: benchmark-output.txt
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
-          alert-threshold: '200%'
-          comment-on-alert: true
-          fail-on-alert: false

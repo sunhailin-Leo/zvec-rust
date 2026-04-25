@@ -1,6 +1,6 @@
 # zvec-rust
 
-[![CI](https://github.com/sunhailin-Leo/zvec-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/sunhailin-Leo/zvec-rust/actions/workflows/ci.yml)
+[![CI](https://github.com/zvec-ai/zvec-rust/actions/workflows/ci.yml/badge.svg)](https://github.com/zvec-ai/zvec-rust/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 English | [中文](README_CN.md)
@@ -50,10 +50,10 @@ Just add the dependency — the build script handles everything:
 
 ```toml
 [dependencies]
-zvec = "0.3"
+zvec = { git = "https://github.com/zvec-ai/zvec-rust.git", tag = "v0.3.1" }
 ```
 
-On first build, `build.rs` will automatically download the prebuilt `libzvec_c_api` for your platform from [GitHub Releases](https://github.com/sunhailin-Leo/zvec-rust/releases) and set up the library path via `rpath`.
+On first build, `build.rs` will automatically download the prebuilt `libzvec_c_api` for your platform from [GitHub Releases](https://github.com/zvec-ai/zvec-rust/releases) and set up the library path via `rpath`.
 
 ### For Advanced Users (Custom Build)
 
